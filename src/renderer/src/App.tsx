@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo } from 'react'
-import { Emotion } from '../../shared/types'
+import { useState, useCallback, useMemo, useEffect } from 'react'
+import { Emotion, AppStatus } from '../../shared/types'
 import { AvatarCanvas } from './components/AvatarCanvas'
 import { StatusIndicator } from './components/StatusIndicator'
 import { ControlOverlay } from './components/ControlOverlay'
@@ -29,13 +29,44 @@ function App() {
     }
   }, [lipSync])
 
-  const { status, errorMsg, startListening, stopListening } = useVoiceInteraction({
+  const { status, errorMsg, startListening, stopListening, setStatus, setErrorMsg } = useVoiceInteraction({
     onAudioNodeReady: handleAudioNodeReady,
     onAddMessage: addMessage,
     onEmotionChange: setEmotion,
     onGestureChange: setGesture,
     onAnimationStateChange: setAnimationState
   })
+
+  const [isAgentActive, setIsAgentActive] = useState(false)
+
+  useEffect(() => {
+    // Listen for agent state changes from Main Process
+    window.electronAPI.onAgentState((agentState, msg) => {
+      setStatus(agentState as AppStatus)
+      if (msg) setErrorMsg(msg)
+    })
+  }, [setStatus, setErrorMsg])
+
+  const handleToggleAgentMode = async () => {
+    if (isAgentActive) {
+      // In MVP, we might need a deactivate IPC or just set flag false.
+      // Assuming we just toggle the UI for now.
+      setIsAgentActive(false)
+      setStatus('idle')
+      return
+    }
+
+    try {
+      const folderPath = await window.electronAPI.pickFolder()
+      if (folderPath) {
+        setIsAgentActive(true)
+        await window.electronAPI.activateAgent(folderPath)
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message)
+      setStatus('error')
+    }
+  }
 
   const handleControllersReady = useCallback((controllers: { lipSync: LipSyncController }) => {
     setLipSync(controllers.lipSync)
@@ -81,6 +112,8 @@ function App() {
           lastAiMessage={lastAiMessage}
           onStartListening={startListening}
           onStopListening={stopListening}
+          onToggleAgentMode={handleToggleAgentMode}
+          isAgentActive={isAgentActive}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         />

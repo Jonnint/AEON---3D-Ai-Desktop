@@ -3,7 +3,7 @@
 // Implements CFG-2: Context isolation + preload script
 // ============================================================
 
-import { ipcMain, BrowserWindow } from 'electron'
+import { ipcMain, BrowserWindow, dialog } from 'electron'
 import { IPC_CHANNELS } from '../shared/types'
 import { AIServiceManager } from './services/AIServiceManager'
 import { saveWindowPosition, getConfig, saveConfig } from './config'
@@ -71,7 +71,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow, aiService: AIService
     async (_event, text: string): Promise<ArrayBuffer> => {
       try {
         const buffer = await aiService.speak(text)
-        return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
+        return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer
       } catch (error) {
         console.error('[IPC] TTS error:', error)
         throw error
@@ -98,7 +98,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow, aiService: AIService
           audioBuffer: result.audioBuffer.buffer.slice(
             result.audioBuffer.byteOffset,
             result.audioBuffer.byteOffset + result.audioBuffer.byteLength
-          )
+          ) as ArrayBuffer
         }
       } catch (error) {
         console.error('[IPC] Pipeline error:', error)
@@ -116,5 +116,26 @@ export function setupIpcHandlers(mainWindow: BrowserWindow, aiService: AIService
   ipcMain.handle(IPC_CHANNELS.CONFIG_SET, async (_event, config: Record<string, unknown>) => {
     await saveConfig(config)
     return getConfig()
+  })
+
+  // ---- Agent Mode ----
+
+  ipcMain.handle(IPC_CHANNELS.AGENT_PICK_FOLDER, async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
+      title: 'Pilih Folder Project',
+      properties: ['openDirectory']
+    })
+    
+    if (canceled || filePaths.length === 0) {
+      return null
+    }
+    
+    return filePaths[0]
+  })
+
+  ipcMain.handle(IPC_CHANNELS.AGENT_ACTIVATE, async (_event, folderPath: string) => {
+    return await aiService.activateAgent(folderPath, (state, msg) => {
+      mainWindow.webContents.send('agent:state', { state, msg })
+    })
   })
 }

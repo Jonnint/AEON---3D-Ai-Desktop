@@ -40,6 +40,8 @@ Thumbs.db
 
 # Ignore AI Services & Providers (as requested)
 src/main/services/providers/
+src/main/services/agent/CodingAgentService.ts
+src/main/services/agent/GitService.ts
 src/main/services/AIServiceManager.ts
 src/main/services/types.ts
 
@@ -47,3 +49,7 @@ src/main/services/types.ts
 out/
 dist/
 release/
+
+# Ignore PRD
+PRD_AI_VTuber_Desktop_Assistant_v0.1.md
+PRD_Airi_Coding_Agent_Mode_v0.1.md

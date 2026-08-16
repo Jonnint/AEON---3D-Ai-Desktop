@@ -40,7 +40,15 @@ const electronAPI = {
   // ---- Config ----
   getConfig: () => ipcRenderer.invoke(IPC_CHANNELS.CONFIG_GET),
   setConfig: (config: Record<string, unknown>) =>
-    ipcRenderer.invoke(IPC_CHANNELS.CONFIG_SET, config)
+    ipcRenderer.invoke(IPC_CHANNELS.CONFIG_SET, config),
+
+  // ---- Agent Mode ----
+  pickFolder: (): Promise<string | null> => ipcRenderer.invoke(IPC_CHANNELS.AGENT_PICK_FOLDER),
+  activateAgent: (folderPath: string): Promise<string[]> => 
+    ipcRenderer.invoke(IPC_CHANNELS.AGENT_ACTIVATE, folderPath),
+  onAgentState: (callback: (state: string, msg?: string) => void) => {
+    ipcRenderer.on('agent:state', (_event, data) => callback(data.state, data.msg))
+  }
 }
 
 // Expose the API to the renderer via contextBridge

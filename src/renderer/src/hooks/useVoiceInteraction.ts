@@ -96,14 +96,18 @@ export function useVoiceInteraction({
       })
       
       // 3. Play response
-      setStatus('speaking')
-      onEmotionChange(result.response.emotion as Emotion)
-      if (result.response.gesture) {
-        onGestureChange(result.response.gesture)
+      if (result.audioBuffer && result.audioBuffer.byteLength > 0) {
+        setStatus('speaking')
+        onEmotionChange(result.response.emotion as Emotion)
+        if (result.response.gesture) onGestureChange(result.response.gesture)
+        onAnimationStateChange('talking')
+        await audioPlayerRef.current?.playBuffer(result.audioBuffer)
+      } else {
+        // If there's no audio, just reset state
+        setStatus('idle')
+        onAnimationStateChange('idle')
+        onEmotionChange('neutral')
       }
-      onAnimationStateChange('talking')
-      
-      await audioPlayerRef.current?.playBuffer(result.audioBuffer)
       
     } catch (error) {
       console.error(error)
@@ -121,6 +125,8 @@ export function useVoiceInteraction({
     status,
     errorMsg,
     startListening,
-    stopListening
+    stopListening,
+    setStatus,
+    setErrorMsg
   }
 }

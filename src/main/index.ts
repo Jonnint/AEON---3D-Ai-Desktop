@@ -114,7 +114,7 @@ app.whenReady().then(async () => {
   const aiService = new AIServiceManager({
     sttProvider: process.env.GROQ_API_KEY ? 'groq' : 'mock',
     llmProvider: process.env.GEMINI_API_KEY ? 'gemini' : 'mock',
-    ttsProvider: process.env.ELEVENLABS_API_KEY ? 'elevenlabs' : 'edge-tts',
+    ttsProvider: 'edge-tts', // Forced for testing to save ElevenLabs credits
     groqApiKey: process.env.GROQ_API_KEY,
     geminiApiKey: process.env.GEMINI_API_KEY,
     elevenlabsApiKey: process.env.ELEVENLABS_API_KEY,

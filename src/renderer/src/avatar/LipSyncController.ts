@@ -19,7 +19,7 @@ export class LipSyncController {
   private currentO = 0
   
   private isConnected = false
-  private smoothingFactor = 0.5 // Higher = smoother but more delay
+  private smoothingFactor = 0.15 // Lower = smoother and more natural
 
   constructor(vrm: VRM) {
     this.vrm = vrm
@@ -111,7 +111,7 @@ export class LipSyncController {
       this.currentO = this.lerp(this.currentO, 0, this.smoothingFactor)
     } else {
       // Normalize values (0-255 to 0-1 range with a multiplier for sensitivity)
-      const sensitivity = 1.5
+      const sensitivity = 2.0 // Increased for better response to TTS
       const normLow = Math.min(1.0, (volLow / 255) * sensitivity)
       const normMid = Math.min(1.0, (volMid / 255) * sensitivity)
       const normHigh = Math.min(1.0, (volHigh / 255) * sensitivity)
